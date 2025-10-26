@@ -8,17 +8,31 @@ require('dotenv').config();
 
 const app = express();
 
+// Debug: Check if environment variables are loading
+console.log('=== ENVIRONMENT CHECK ===');
+console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Loaded' : 'NOT LOADED');
+console.log('PORT:', process.env.PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('=========================');
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// ✅ UPDATED: Use the NEW cluster connection string
+const MONGODB_URI = 'mongodb+srv://instabiteadmin:Bittu100@cluster0.enjyvnh.mongodb.net/instabite?retryWrites=true&w=majority&appName=Cluster0';
+
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/instabite_db', {
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 10000, // 10 second timeout
 })
-.then(() => console.log('✅ MongoDB Connected Successfully'))
-.catch(err => console.log('❌ MongoDB Connection Error:', err));
+.then(() => console.log('✅ MongoDB Connected Successfully to NEW Cluster'))
+.catch(err => {
+  console.log('❌ MongoDB Connection Error:', err.message);
+  console.log('💡 Make sure your new cluster is active and IP is whitelisted');
+});
 
 // Schemas
 const restaurantSchema = new mongoose.Schema({
@@ -523,7 +537,8 @@ app.get('/api/health', (req, res) => {
     success: true, 
     message: '🚀 InstaBite Backend is Running!', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
   });
 });
 
@@ -558,7 +573,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ FIXED: 404 handler - removed the problematic '*'
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ 
     success: false, 
