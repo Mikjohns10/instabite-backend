@@ -583,8 +583,11 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+
+// ✅ CRITICAL FIX: Bind to 0.0.0.0 for Render
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🎯 InstaBite Backend Server running on port ${PORT}`);
   console.log(`📍 Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 External URL: https://instabile-backend-8g09.onrender.com/api/health`);
+  console.log(`🚀 Server is accessible from external connections`);
 });
